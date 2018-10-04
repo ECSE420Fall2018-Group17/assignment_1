@@ -3,11 +3,12 @@ package ca.mcgill.ecse420.a1;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MatrixMultiplication {
 	
-	private static final int NUMBER_THREADS = 1;
-	private static final int MATRIX_SIZE = 2;
+	private static final int NUMBER_THREADS = 7;
+	private static final int MATRIX_SIZE = 4000;
 
     public static void main(String[] args) {
 		
@@ -15,12 +16,26 @@ public class MatrixMultiplication {
     double[][] a = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
 	double[][] b = generateRandomMatrix(MATRIX_SIZE, MATRIX_SIZE);
 	
-	// Perform the multiplications
-	double[][] resultSequential = sequentialMultiplyMatrix(a, b);
-	double[][] resultParallel = parallelMultiplyMatrix(a, b);
+	// Perform the multiplications and times them
+	long startTime;
+	long endTime;
+	long timeTakenSequential;
+	long timeTakenParallel;
 	
-    System.out.println("Sequential Multiply: " + Arrays.deepToString(resultSequential));
-    System.out.println("Parallel Multiply: " +Arrays.deepToString(resultParallel));
+	startTime = System.currentTimeMillis();
+	double[][] resultSequential = sequentialMultiplyMatrix(a, b);
+	endTime = System.currentTimeMillis();
+	timeTakenSequential = endTime - startTime;
+	startTime = System.currentTimeMillis();
+	double[][] resultParallel = parallelMultiplyMatrix(a, b);
+	endTime = System.currentTimeMillis();
+	timeTakenParallel = endTime - startTime;
+	
+	// Output the results of the multiplication
+    //System.out.println("Sequential Multiply: " + Arrays.deepToString(resultSequential));
+    System.out.println("Time taken for sequential:" + timeTakenSequential);
+    //System.out.println("Parallel Multiply: " +Arrays.deepToString(resultParallel));
+    System.out.println("Time taken for parallel:" + timeTakenParallel);
 	}
 	
 	/**
@@ -65,7 +80,64 @@ public class MatrixMultiplication {
 	 * @return the result of the multiplication
 	 * */
     public static double[][] parallelMultiplyMatrix(double[][] a, double[][] b) {
-      return null;
+      
+      // Verify that the number of columns in matrix A matches the number of rows in matrix B
+      int aNoOfColumns = a[0].length;
+      int aNoOfRows = a.length;
+      int bNoOfColumns = b[0].length;
+      int bNoOfRows = b.length;
+      if (aNoOfColumns != bNoOfRows) {
+        throw new IllegalArgumentException("A:Rows: " + aNoOfColumns + " did not match B:Columns " + bNoOfRows + ".");
+      }
+      
+      // Initialize empty results matrix
+      double[][] c = new double[aNoOfRows][bNoOfColumns];
+      
+      
+      // Implement the task of determining an single entry in the results matrix
+      class WorkerThread implements Runnable {
+        
+        int rowNumber;
+        int colNumber;
+        
+        public WorkerThread(int rowNumber, int colNumber) {
+          this.rowNumber = rowNumber;
+          this.colNumber = colNumber;
+        }
+        
+        int aNoOfColumns = a[0].length;
+
+        @Override
+        public void run() {
+          c[rowNumber][colNumber] = 0;
+          for (int i = 0; i < aNoOfColumns ; i++) {
+            c[rowNumber][colNumber] += a[rowNumber][i] * b[i][colNumber];
+          }
+          
+        }
+        
+      }
+      
+      // Create a fixed thread pool
+      ExecutorService executor = Executors.newFixedThreadPool(NUMBER_THREADS);
+      
+      // Perform parallel matrix multiplication
+      for (int i = 0; i < aNoOfRows; i++){
+        for (int j = 0; j < bNoOfColumns; j++){
+          WorkerThread workerThread = new WorkerThread(i, j);
+          executor.execute(workerThread);
+        }
+      }
+      
+      // Shutdown the executor
+      executor.shutdown();
+      try {
+          executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      
+      return c;
 	}
         
     /**
@@ -83,5 +155,5 @@ public class MatrixMultiplication {
       }
       return matrix;
     }
-	
+    
 }
