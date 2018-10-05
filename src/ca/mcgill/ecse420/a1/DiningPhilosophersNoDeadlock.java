@@ -23,16 +23,16 @@ public class DiningPhilosophersNoDeadlock {
 
         for(int i=0;i<philosophers.length;i++ ){
             //creating chopstick objects to pass to philopsopher constructor
-            ReentrantLock leftChopstick = chopsticks[i];
-            ReentrantLock rightChopstick = chopsticks[(i+1)%chopsticks.length];
+            ReentrantLock chopstick1 = chopsticks[i];
+            ReentrantLock chopstick2 = chopsticks[(i+1)%chopsticks.length];
 
             //Avoid deadlock by checking if it is the last philospher
             //if yes, then pick up right chopstick first
             if(i == philosophers.length-1){
-                philosophers[i] = new Philosopher(rightChopstick,leftChopstick);
+                philosophers[i] = new Philosopher(chopstick1,chopstick2);
             }
             else {
-                philosophers[i] = new Philosopher(leftChopstick, rightChopstick);
+                philosophers[i] = new Philosopher(chopstick2,chopstick1);
             }
             executorService.execute(philosophers[i]);
         }
@@ -64,17 +64,17 @@ public class DiningPhilosophersNoDeadlock {
                     action("Thinking");
                     if(chopstick1.tryLock()){
                         try{
-                            action("Got Left Chopstick");
+                            action("Got first Chopstick");
                             if(chopstick2.tryLock()){
                                 try{
-                                    action("Got Right Chopstick");
+                                    action("Got Second Chopstick");
                                     action("Eating");
-                                    action("Leave Right Chopstick");
                                 }
                                 catch(InterruptedException exception){
                                     exception.printStackTrace();
                                 }
                                 finally {
+                                    action("Leave Second Chopstick");
                                     chopstick2.unlock();
                                 }
                             }
@@ -83,6 +83,7 @@ public class DiningPhilosophersNoDeadlock {
                             exception.printStackTrace();
                         }
                         finally{
+                            action("Leave First Chopstick");
                             chopstick1.unlock();
                         }
                     }
