@@ -41,6 +41,8 @@ public class DeadLock {
         lock1.lock();
         System.out.println("Task1: lock1 acquired!");
         
+        try{
+          
         System.out.println("Task1: trying to acquire lock2...");
         lock2.lock();
         System.out.println("Task1: lock2 acquired!");
@@ -50,6 +52,10 @@ public class DeadLock {
         System.out.println("Task1: trying to release lock2...");
         lock2.unlock();
         System.out.println("Task1: lock2 released!");
+        
+        } catch (Exception e){
+          e.printStackTrace();
+        }
         
         System.out.println("Task1: trying to release lock1...");
         lock1.unlock();
@@ -65,6 +71,8 @@ public class DeadLock {
       lock2.lock();
       System.out.println("Task2: lock2 acquired!");
       
+      try {
+        
       System.out.println("Task2: trying to acquire lock1...");
       lock1.lock();
       System.out.println("Task2: lock1 acquired!");
@@ -74,6 +82,10 @@ public class DeadLock {
       System.out.println("Task2: trying to release lock1...");
       lock1.unlock();
       System.out.println("Task2: lock1 released!");
+      
+      } catch (Exception e){
+        e.printStackTrace();
+      }
       
       System.out.println("Task2: trying to release lock2...");
       lock2.unlock();
