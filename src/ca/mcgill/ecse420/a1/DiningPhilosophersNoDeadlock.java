@@ -78,6 +78,10 @@ public class DiningPhilosophersNoDeadlock {
                                     chopstick2.unlock();
                                 }
                             }
+                            else{
+                                //if failed to acquire lock increase priority
+                                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+                            }
                         }
                         catch(InterruptedException exception){
                             exception.printStackTrace();
@@ -85,7 +89,13 @@ public class DiningPhilosophersNoDeadlock {
                         finally{
                             action("Leave First Chopstick");
                             chopstick1.unlock();
+                            //Set priority back to normal
+                            Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
                         }
+                    }
+                    else{
+                        //if failed to acquire lock increase priority
+                        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
                     }
                 }
                 catch (InterruptedException e){
